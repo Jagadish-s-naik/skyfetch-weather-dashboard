@@ -2,25 +2,81 @@
 // The actual OpenWeatherMap API key is stored and used securely on the server.
 const API_URL = '/api/weather';
 
+const searchBtn = document.getElementById('search-btn');
+const cityInput = document.getElementById('city-input');
+const weatherDisplay = document.getElementById('weather-display');
+
+function showWelcome() {
+    if (!weatherDisplay) {
+        return;
+    }
+
+    weatherDisplay.innerHTML = `
+        <div class="welcome-message">
+            <p>Enter a city name to get started.</p>
+        </div>
+    `;
+}
+
+function showLoading() {
+    if (!weatherDisplay) {
+        return;
+    }
+
+    const loadingHTML = `
+        <div class="loading-container">
+            <div class="spinner" aria-hidden="true"></div>
+            <p>Loading...</p>
+        </div>
+    `;
+
+    weatherDisplay.innerHTML = loadingHTML;
+}
+
+function showError(message) {
+    if (!weatherDisplay) {
+        return;
+    }
+
+    const errorHTML = `
+        <div class="error-message">
+            <h3>Error</h3>
+            <p>${message}</p>
+        </div>
+    `;
+
+    weatherDisplay.innerHTML = errorHTML;
+}
+
 // Function to fetch weather data
-function getWeather(city) {
-    // Build the URL to call the backend proxy (no API key in client-side code)
+async function getWeather(city) {
+    showLoading();
+
+    if (searchBtn) {
+        searchBtn.disabled = true;
+        searchBtn.textContent = 'Searching...';
+    }
+
     const url = `${API_URL}?q=${encodeURIComponent(city)}`;
-    
-    // Make API call using Axios
-    axios.get(url)
-        .then(function(response) {
-        .then(function(response) {
-            // Success! We got the data
-            console.log('Weather Data:', response.data);
-            displayWeather(response.data);
-        })
-        .catch(function(error) {
-            // Something went wrong
-            console.error('Error fetching weather:', error);
-            document.getElementById('weather-display').innerHTML = 
-                '<p class="loading">Could not fetch weather data. Please try again.</p>';
-        });
+
+    try {
+        const response = await axios.get(url);
+        console.log('Weather Data:', response.data);
+        displayWeather(response.data);
+    } catch (error) {
+        console.error('Error fetching weather:', error);
+
+        if (error.response && error.response.status === 404) {
+            showError('City not found. Please check the spelling and try again.');
+        } else {
+            showError('Something went wrong. Please try again later.');
+        }
+    } finally {
+        if (searchBtn) {
+            searchBtn.disabled = false;
+            searchBtn.textContent = 'Search';
+        }
+    }
 }
 
 // Function to display weather data
@@ -43,8 +99,46 @@ function displayWeather(data) {
     `;
     
     // Put it on the page
-    document.getElementById('weather-display').innerHTML = weatherHTML;
+    if (weatherDisplay) {
+        weatherDisplay.innerHTML = weatherHTML;
+    }
+
+    if (cityInput) {
+        cityInput.focus();
+    }
 }
 
-// Call the function when page loads
-getWeather('London');
+function handleSearch() {
+    if (!cityInput) {
+        return;
+    }
+
+    const city = cityInput.value.trim();
+
+    if (!city) {
+        showError('Please enter a city name.');
+        return;
+    }
+
+    if (city.length < 2) {
+        showError('City name too short.');
+        return;
+    }
+
+    getWeather(city);
+    cityInput.value = '';
+}
+
+if (searchBtn) {
+    searchBtn.addEventListener('click', handleSearch);
+}
+
+if (cityInput) {
+    cityInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            handleSearch();
+        }
+    });
+}
+
+showWelcome();
