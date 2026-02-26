@@ -1,15 +1,15 @@
-// Your OpenWeatherMap API Key
-const API_KEY = '72477199b2fd04f95a5bd250348f99c1';  
-// Replace with your actual API key
-const API_URL = 'https://api.openweathermap.org/data/2.5/weather';
+// Backend endpoint that proxies requests to OpenWeatherMap.
+// The actual OpenWeatherMap API key is stored and used securely on the server.
+const API_URL = '/api/weather';
 
 // Function to fetch weather data
 function getWeather(city) {
-    // Build the complete URL
-    const url = `${API_URL}?q=${city}&appid=${API_KEY}&units=metric`;
+    // Build the URL to call the backend proxy (no API key in client-side code)
+    const url = `${API_URL}?q=${encodeURIComponent(city)}`;
     
     // Make API call using Axios
     axios.get(url)
+        .then(function(response) {
         .then(function(response) {
             // Success! We got the data
             console.log('Weather Data:', response.data);
