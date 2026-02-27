@@ -354,4 +354,4 @@ WeatherApp.prototype.clearHistory = function() {
 };
 
 // TODO: Create single instance of WeatherApp
-const app = new WeatherApp('9912f2aa3f54ba082ac327ab2b83251a');
+const app = new WeatherApp(CONFIG.API_KEY);
